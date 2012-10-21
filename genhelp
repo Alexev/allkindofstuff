@@ -1,0 +1,62 @@
+cd ILN
+make DVSDK_MAJOR=3 env
+FIlesystem:
+make cleanall;
+make pack
+
+Kernel:
+ 0. go to kernel directory
+ 1. make mrproper
+ 2. make ARCH=arm CROSS_COMPILE=/opt/arm-2009q1/bin/arm-none-linux-gnueabi- mgu_defconfig
+ 3. make ARCH=arm CROSS_COMPILE=/opt/arm-2009q1/bin/arm-none-linux-gnueabi-  uImage
+ 4. kernel is: ./arch/arm/boot/uImage (uImage_mvu, uImage_mgu)
+
+Decode:
+1. go to ILN/MGU
+2. make decode3/decode
+
+Installing a TFTP server on ubuntu:
+
+sudo apt-get install xinet tftpd tftp
+   :sudo apt-get install xinetd tftpd tftp
+   :sudo vi /etc/xinetd.d/tftp (new file)
+	insert:
+service tftp
+{
+protocol        = udp
+port            = 69
+socket_type     = dgram
+wait            = yes
+user            = nobody
+server          = /usr/sbin/in.tftpd
+server_args     = /tftpboot
+disable         = no
+}
+	escape
+   :sudo mkdir /tftpboot
+   :sudo chmod -R 777 /tftpboot
+   :sudo chown -R nobody /tftpboot
+   :sudo /etc/init.d/xinetd start
+
+MVU Bootargs:
+setenv bootargs 'mem=120M console=ttyS0,115200n8 root=/dev/nfs nfsroot=192.168.136.173:/home/michele/comqi/ILN/MVU/Filesystem rw noinitrd ip=dhcp ethaddr=C0:3B:8F:00:01:F3 davincihd_capture.channel0_numbuffers=4 hardware_id=50000001'
+
+*************Export filesystem
+Edit the /etc/exports file on the host Linux workstation (not the exports file on the target file system). Add the following line for exporting the filesys directory, substituting your user name for <useracct>. Use the full path from root; ~ may not work for exports on all file systems. 
+
+/home/<useracct>/workdir/filesys *(rw,no_root_squash,no_all_squash,sync) 
+ 
+NOTE: Make sure you do not add a space between the * and the ( in the above command.
+
+    Still as root, use the following commands to make the NFS server aware of the change to its configuration and to invoke an NFS restart. 
+
+host $ /usr/sbin/exportfs -av 
+host $ /etc/init.d/nfs-kernel-server restart 
+ 
+NOTE: Use exportfs -rav to re-export all directories. Use /etc/init.d/nfs-kernel-server status to verify that the NFS status is running.
+**********************************
+
+Setting a root password: $sudo passwd root
+
+my current machine's passwrd = root
+****************************
